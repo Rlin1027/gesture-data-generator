@@ -2,8 +2,8 @@ from PIL import Image
 import os
 
 # Paths
-INPUT_PATH = "/Users/redlin/.gemini/antigravity/brain/c194031c-e9bc-460b-abe1-b4fd74b32d13/webcam_thumbs_up_clean_1763565748137.png"
-OUTPUT_PATH = "/Users/redlin/Library/CloudStorage/GoogleDrive-aired.lin1027@gmail.com/我的雲端硬碟/gesture_gen/webcam_thumbs_up.png"
+INPUT_PATH = ""
+OUTPUT_PATH = ""
 
 def process_image():
     if not os.path.exists(INPUT_PATH):
