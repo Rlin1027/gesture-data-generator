@@ -2,6 +2,7 @@ import google.generativeai as genai
 from PIL import Image
 import os
 import json
+import io
 
 class GeminiClient:
     def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash-image"):
@@ -28,7 +29,26 @@ class GeminiClient:
         
         try:
             response = self.model.generate_content(full_prompt)
-            return response
+            
+            # Attempt to extract image from response
+            # Check if any part is an image
+            if hasattr(response, 'parts'):
+                for part in response.parts:
+                    if hasattr(part, 'image'):
+                        return part.image
+                    if hasattr(part, 'inline_data') and part.inline_data:
+                        # Decode inline data if needed, but part.image usually handles it in SDK
+                        try:
+                            return Image.open(io.BytesIO(part.inline_data.data))
+                        except:
+                            pass
+            
+            # If we are here, maybe the model refused or returned text
+            if hasattr(response, 'text'):
+                print(f"Model returned text instead of image: {response.text}")
+            
+            return None
+
         except Exception as e:
             print(f"Error in generate_variation: {e}")
             raise e
@@ -52,7 +72,23 @@ class GeminiClient:
 
         try:
             response = self.model.generate_content(full_prompt)
-            return response
+            
+            # Attempt to extract image from response
+            if hasattr(response, 'parts'):
+                for part in response.parts:
+                    if hasattr(part, 'image'):
+                        return part.image
+                    if hasattr(part, 'inline_data') and part.inline_data:
+                        try:
+                            return Image.open(io.BytesIO(part.inline_data.data))
+                        except:
+                            pass
+            
+            if hasattr(response, 'text'):
+                print(f"Model returned text instead of image: {response.text}")
+                
+            return None
+
         except Exception as e:
             print(f"Error in modify_gesture: {e}")
             raise e
@@ -81,21 +117,18 @@ class GeminiClient:
         """
         
         try:
-            # Use a text-capable model for analysis if the image model doesn't support text output well
-            # But gemini-1.5-flash/pro supports both. gemini-2.5-flash-image might be specialized.
-            # Let's try using the same model first, assuming it's multimodal.
-            # If it fails, we might need to switch model for analysis.
-            # For safety, let's use gemini-1.5-flash for analysis as it's reliable for VQA.
-            # However, we want to use the user's key and model preference.
-            # Let's stick to self.model for now, but if it's an image-only generation model, this might fail.
-            # "gemini-2.5-flash-image" suggests it might be optimized for image gen.
-            # Let's try to use "gemini-1.5-flash" for analysis specifically if possible, 
-            # or just use the current model and hope it handles VQA.
-            # Actually, usually "gemini-pro-vision" or "gemini-1.5-flash" is better for VQA.
-            # Let's instantiate a specific VQA model using the same key.
-            
-            analysis_model = genai.GenerativeModel("gemini-1.5-flash")
-            response = analysis_model.generate_content([prompt, image])
+            # User requested gemini-2.0-flash-lite
+            try:
+                analysis_model = genai.GenerativeModel("gemini-2.0-flash-lite-preview-02-05")
+                response = analysis_model.generate_content([prompt, image])
+            except Exception:
+                try:
+                    analysis_model = genai.GenerativeModel("gemini-2.0-flash-lite")
+                    response = analysis_model.generate_content([prompt, image])
+                except Exception:
+                    # Fallback to 1.5 Flash if 2.0 fails
+                    analysis_model = genai.GenerativeModel("gemini-1.5-flash")
+                    response = analysis_model.generate_content([prompt, image])
             
             text = response.text
             # Clean up potential markdown
