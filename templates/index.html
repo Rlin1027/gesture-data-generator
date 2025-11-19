@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gesture Data Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Gesture Data Generator</h1>
+            <p>AI-Powered NPU Dataset Creation</p>
+        </header>
+
+        <main>
+            <div class="controls-panel">
+                <div class="config-section">
+                    <h3>1. 系統設定</h3>
+                    <div class="input-group">
+                        <label for="apiKey">Gemini API 金鑰 (API Key)</label>
+                        <input type="password" id="apiKey" placeholder="請在此貼上您的 Google AI Studio API Key" required>
+                        <small class="hint">您的金鑰僅用於本次連線，不會被儲存。</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="modelName">使用模型</label>
+                        <input type="text" id="modelName" value="gemini-2.5-flash-image" readonly>
+                    </div>
+                </div>
+
+                <div class="mode-section">
+                    <h3>2. 選擇生成模式</h3>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="variation" onclick="setMode('variation')">
+                            <span class="icon">✨</span>
+                            <div class="text">
+                                <strong>情境變異生成</strong>
+                                <small>保留手勢，改變背景/膚色/光影</small>
+                            </div>
+                        </button>
+                        <button class="mode-btn" data-mode="modification" onclick="setMode('modification')">
+                            <span class="icon">🔄</span>
+                            <div class="text">
+                                <strong>手勢動作修改</strong>
+                                <small>參考目標圖片來改變手勢動作</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="generateForm">
+                    <div class="upload-section">
+                        <h3>3. 上傳圖片</h3>
+
+                        <div class="file-input-container">
+                            <label>原始種子圖片 (Seed Image)</label>
+                            <div class="upload-box">
+                                <input type="file" id="seedImage" accept="image/*" required
+                                    onchange="previewImage(this, 'seedPreview')">
+                                <div class="preview-area" id="seedPreview">
+                                    <span class="placeholder-text">點擊或拖曳上傳<br>建議尺寸: 320x180 (灰階)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="file-input-container" id="refImageContainer" style="display: none;">
+                            <label>目標參考圖片 (Reference Image)</label>
+                            <div class="upload-box">
+                                <input type="file" id="refImage" accept="image/*"
+                                    onchange="previewImage(this, 'refPreview')">
+                                <div class="preview-area" id="refPreview">
+                                    <span class="placeholder-text">上傳您想模仿的手勢圖片</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="prompt-section">
+                        <h3>4. 描述生成需求 (Prompt)</h3>
+                        <div class="input-group">
+                            <label for="prompt">請描述您希望 AI 如何修改圖片：</label>
+                            <textarea id="prompt" rows="3" placeholder="例如：將背景改為戶外陽光下的公園，手部皮膚改為小麥色..."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="generateBtn" class="primary-btn">開始生成圖片 🚀</button>
+                </form>
+            </div>
+
+            <div class="results-panel">
+                <div class="results-header">
+                    <h2>生成結果預覽</h2>
+                    <span class="badge">自動轉換為 320x180 灰階</span>
+                </div>
+                <div id="gallery" class="gallery-grid">
+                    <!-- Generated images will appear here -->
+                    <div class="empty-state">
+                        <p>尚未生成任何圖片</p>
+                        <small>請在左側設定並點擊「開始生成」</small>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
