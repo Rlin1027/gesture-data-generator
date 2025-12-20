@@ -63,6 +63,7 @@ document.getElementById('generateForm').addEventListener('submit', async functio
     formData.append('model_name', document.getElementById('modelName').value);
     formData.append('prompt', document.getElementById('prompt').value);
     formData.append('mode', currentMode);
+    formData.append('batch_size', document.getElementById('batchSize').value);
     formData.append('seed_image', document.getElementById('seedImage').files[0]);
 
     if (currentMode === 'modification') {
@@ -76,14 +77,29 @@ document.getElementById('generateForm').addEventListener('submit', async functio
         });
 
         if (response.ok) {
-            const blob = await response.blob();
-            const imageUrl = URL.createObjectURL(blob);
-            addToGallery(imageUrl);
+            const data = await response.json();
 
-            // Remove empty state if it exists
-            const emptyState = document.querySelector('.empty-state');
-            if (emptyState) {
-                emptyState.remove();
+            if (data.images && Array.isArray(data.images)) {
+                // Process each image in the batch
+                data.images.forEach((imgDataUrl, index) => {
+                    // Generate filename
+                    const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+                    const modeShort = currentMode === 'modification' ? 'mod' : 'var';
+                    const promptText = document.getElementById('prompt').value;
+                    // Sanitize prompt
+                    const promptSnippet = promptText.split(' ').slice(0, 3).join('_').replace(/[^a-zA-Z0-9_]/g, '');
+                    const filename = `gesture_${modeShort}_${timestamp}_${promptSnippet || 'gen'}_${index + 1}.png`;
+
+                    addToGallery(imgDataUrl, filename);
+                });
+
+                // Remove empty state if it exists
+                const emptyState = document.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+            } else {
+                alert('錯誤: 伺服器回傳格式不正確');
             }
         } else {
             const errorData = await response.json();
@@ -97,7 +113,7 @@ document.getElementById('generateForm').addEventListener('submit', async functio
     }
 });
 
-function addToGallery(imageUrl) {
+function addToGallery(imageUrl, filename = 'generated_gesture.png') {
     const gallery = document.getElementById('gallery');
     const item = document.createElement('div');
     item.className = 'gallery-item';
@@ -110,7 +126,7 @@ function addToGallery(imageUrl) {
         <img src="${imageUrl}" alt="Generated Image">
         <div class="actions">
             <button class="analyze-btn" onclick="analyzeImage('${imageUrl}', '${itemId}')">🔍 AI 分析</button>
-            <a href="${imageUrl}" download="generated_gesture.png" class="download-btn">下載圖片 ⬇️</a>
+            <a href="${imageUrl}" download="${filename}" class="download-btn">下載圖片 ⬇️</a>
         </div>
     `;
 

@@ -80,9 +80,20 @@
 
                     <div class="prompt-section">
                         <h3>4. 描述生成需求 (Prompt)</h3>
-                        <div class="input-group">
-                            <label for="prompt">請描述您希望 AI 如何修改圖片：</label>
-                            <textarea id="prompt" rows="3" placeholder="例如：將背景改為戶外陽光下的公園，手部皮膚改為小麥色..."></textarea>
+                        <div class="form-group">
+                            <label for="prompt">提示詞 (Prompt):</label>
+                            <textarea id="prompt" rows="3" placeholder="描述您想要生成的場景或是修改的方向..."></textarea>
+                        </div>
+
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                            <label for="batchSize" style="margin: 0;">生成數量:</label>
+                            <select id="batchSize"
+                                style="padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: #fff;">
+                                <option value="1">1 張</option>
+                                <option value="2">2 張</option>
+                                <option value="3" selected>3 張</option>
+                                <option value="4">4 張</option>
+                            </select>
                         </div>
                     </div>
 

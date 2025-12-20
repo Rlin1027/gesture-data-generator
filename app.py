@@ -18,11 +18,16 @@ def index():
 @app.route('/api/generate', methods=['POST'])
 def generate():
     try:
+        batch_size = int(request.form.get('batch_size', 1))
+        # Limit batch size to avoid abuse/timeouts
+        batch_size = max(1, min(batch_size, 4))
+
+        # Retrieve required fields
         api_key = request.form.get('api_key')
         model_name = request.form.get('model_name', 'gemini-2.5-flash-image')
         prompt = request.form.get('prompt')
-        mode = request.form.get('mode') # 'variation' or 'modification'
-        
+        mode = request.form.get('mode')
+
         if not api_key:
             return jsonify({'error': 'API Key is required'}), 400
 
@@ -36,55 +41,58 @@ def generate():
         if not seed_image:
             return jsonify({'error': 'Invalid seed image'}), 400
 
-        result_image = None
-
-        if mode == 'variation':
-            # Function 1: Variation
-            # result_image = client.generate_variation(seed_image, prompt)
-            # Mocking response for now as we can't actually call the API without a key
-            # In real scenario:
+        # Helper function for single generation
+        def generate_single():
             try:
-                result_image = client.generate_variation(seed_image, prompt)
+                if mode == 'variation':
+                    return client.generate_variation(seed_image, prompt)
+                elif mode == 'modification':
+                    # We need to process ref_image inside or pass it. 
+                    # Since ref_image is same for all, process once outside.
+                    return client.modify_gesture(seed_image, ref_image, prompt)
+                else:
+                    raise ValueError("Invalid mode")
             except Exception as e:
-                return jsonify({'error': str(e)}), 500
+                print(f"Generation error: {e}")
+                return None
 
-        elif mode == 'modification':
-            # Function 2: Modification
+        # Prepare reference image if needed
+        ref_image = None
+        if mode == 'modification':
             ref_file = request.files.get('reference_image')
             if not ref_file:
                 return jsonify({'error': 'Reference image is required for modification'}), 400
-            
             ref_image = process_image(ref_file)
-            try:
-                result_image = client.modify_gesture(seed_image, ref_image, prompt)
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        else:
-            return jsonify({'error': 'Invalid mode'}), 400
 
-        # Handle the result
-        # If result_image is a PIL Image, return it
-        # If it's a response object, we might need to extract the image
-        # For this template, let's assume we get a PIL Image back or we handle it here.
-        # If the API call fails or returns text, we need to handle that.
+        # Run in parallel
+        import concurrent.futures
+        generated_images = []
         
-        if isinstance(result_image, Image.Image):
-            # Ensure it's 320x180 grayscale
-            result_image = result_image.convert("L").resize((320, 180), Image.Resampling.LANCZOS)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=batch_size) as executor:
+            futures = [executor.submit(generate_single) for _ in range(batch_size)]
+            for future in concurrent.futures.as_completed(futures):
+                img = future.result()
+                if img and isinstance(img, Image.Image):
+                    generated_images.append(img)
+
+        if not generated_images:
+            return jsonify({'error': 'Failed to generate any images'}), 500
+
+        # Process and convert to Base64
+        encoded_images = []
+        for img in generated_images:
+            # Ensure 320x180 grayscale
+            img = img.convert("L").resize((320, 180), Image.Resampling.LANCZOS)
             
-            img_bytes = image_to_bytes(result_image)
-            return send_file(
-                io.BytesIO(img_bytes),
-                mimetype='image/png',
-                as_attachment=False,
-                download_name='generated.png'
-            )
-        else:
-            # If we got something else (like a text response saying it can't do it)
-            return jsonify({'error': 'Model did not return an image', 'details': str(result_image)}), 500
+            buffered = io.BytesIO()
+            img.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            encoded_images.append(f"data:image/png;base64,{img_str}")
+
+        return jsonify({'images': encoded_images})
 
     except Exception as e:
+        print(f"Error in generate endpoint: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/analyze', methods=['POST'])
