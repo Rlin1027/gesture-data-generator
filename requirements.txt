@@ -1,4 +1,5 @@
 flask
+flask-sqlalchemy>=3.0
 google-generativeai
 pillow
 python-dotenv
