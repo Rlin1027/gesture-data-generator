@@ -1,0 +1,28 @@
+job:
+  name: gesture_dataset_v1
+  mode: variation
+input:
+  seed_image: ./seeds/hand_pose_01.png
+generation:
+  count: 200
+  batch_size: 4
+  prompt: Generate variation with different lighting and background
+  model: gemini-2.0-flash-exp-image-generation
+api:
+  key_env: GEMINI_API_KEY
+  rate_limit: 60
+  retry_attempts: 3
+  retry_delay: 5
+output:
+  directory: ./output/dataset_v1
+  format: png
+  compression:
+    enabled: true
+    png_level: 6
+    webp_quality: 85
+  naming: '{job_name}_{index:04d}_{timestamp}'
+metadata:
+  enabled: true
+  format: json
+  include_prompt: true
+  include_generation_time: true

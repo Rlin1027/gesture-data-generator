@@ -2,3 +2,6 @@ flask
 google-generativeai
 pillow
 python-dotenv
+pyyaml>=6.0
+tqdm>=4.65
+click>=8.0

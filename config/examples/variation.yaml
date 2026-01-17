@@ -1,0 +1,37 @@
+# Variation Generation Configuration Example
+# Use this template to generate image variations with different lighting and backgrounds
+
+job:
+  name: "gesture_variation_dataset"
+  mode: "variation"
+
+input:
+  seed_image: "./seeds/hand_pose_01.png"
+  # reference_image is not needed for variation mode
+
+generation:
+  count: 200                  # Total number of images to generate
+  batch_size: 4               # Images per API call (1-4)
+  prompt: "Generate a realistic grayscale hand gesture image variation with different lighting conditions and background textures. Maintain the exact same hand pose and finger positions."
+  model: "gemini-2.0-flash-exp-image-generation"
+
+api:
+  key_env: "GEMINI_API_KEY"   # Environment variable containing API key
+  rate_limit: 60              # Requests per minute limit
+  retry_attempts: 3           # Number of retries on failure
+  retry_delay: 5              # Seconds between retries
+
+output:
+  directory: "./output/variations"
+  format: "png"               # Options: png, webp, both
+  compression:
+    enabled: true
+    png_level: 6              # 0-9, higher = more compression
+    webp_quality: 85          # 1-100, higher = better quality
+  naming: "{job_name}_{index:04d}_{timestamp}"
+
+metadata:
+  enabled: true
+  format: "json"              # Options: json, csv, both
+  include_prompt: true
+  include_generation_time: true

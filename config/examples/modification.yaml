@@ -1,0 +1,37 @@
+# Modification Generation Configuration Example
+# Use this template to transfer style from seed image to reference gestures
+
+job:
+  name: "gesture_modification_dataset"
+  mode: "modification"
+
+input:
+  seed_image: "./seeds/style_source.png"
+  reference_image: "./refs/target_gesture.png"  # Required for modification mode
+
+generation:
+  count: 100                  # Total number of images to generate
+  batch_size: 4               # Images per API call (1-4)
+  prompt: "Transfer the visual style, lighting, and texture from the seed image to the reference gesture. Maintain the exact hand pose from the reference while applying the appearance characteristics of the seed."
+  model: "gemini-2.0-flash-exp-image-generation"
+
+api:
+  key_env: "GEMINI_API_KEY"   # Environment variable containing API key
+  rate_limit: 60              # Requests per minute limit
+  retry_attempts: 3           # Number of retries on failure
+  retry_delay: 5              # Seconds between retries
+
+output:
+  directory: "./output/modifications"
+  format: "webp"              # WebP for better compression
+  compression:
+    enabled: true
+    png_level: 6
+    webp_quality: 85
+  naming: "{job_name}_{index:04d}_{timestamp}"
+
+metadata:
+  enabled: true
+  format: "both"              # Generate both JSON and CSV
+  include_prompt: true
+  include_generation_time: true
