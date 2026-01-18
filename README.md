@@ -10,6 +10,7 @@ A Flask web tool and CLI for generating and analyzing 320×180 grayscale hand-ge
 - **AI Vision QC** – automatic quality check (finger count, realism score, lighting, issues).
 - **Batch generation** – request up to 4 images per call.
 - **Download & naming** – images saved with descriptive filenames.
+- **History tracking** – persistent history of all generations with search, filter, and download.
 
 ### CLI Batch Generation (New!)
 - **Config-driven** – YAML configuration files for reproducible experiments.
@@ -49,6 +50,15 @@ Open <http://127.0.0.1:5000> in a browser.
 5. Select **Batch size** (1-4) and click **Generate**.
 6. Use the **🔍 AI 分析** button on each result to view quality metrics.
 7. Click **下載圖片** to download the generated file.
+8. Click **📜 歷史記錄** to browse past generations.
+
+### History Page
+Access `/history` to view all past generations with:
+- **Search** – filter by prompt keywords.
+- **Filter** – by mode (variation/modification) or status (success/partial/failed).
+- **Detail view** – click any card to see full metadata and all images.
+- **Download ZIP** – download all images and metadata from a generation.
+- **Delete** – remove unwanted records and their associated files.
 
 ## CLI Batch Generation
 
@@ -145,9 +155,12 @@ python -m pytest tests/unit/test_rate_limiter.py -v
 ```
 gesture_gen/
 ├── app.py                    # Flask web server
+├── database.py               # SQLite database initialization
 ├── cli.py                    # CLI entry point
 ├── gemini_client.py          # Gemini API wrapper
 ├── utils.py                  # Image processing utilities
+├── models/
+│   └── generation.py         # GenerationRecord ORM model
 ├── core/
 │   ├── batch_processor.py    # Batch generation engine
 │   ├── rate_limiter.py       # Token bucket rate limiter
@@ -156,6 +169,9 @@ gesture_gen/
 ├── config/
 │   ├── schema.py             # Config validation
 │   └── examples/             # Example configs
+├── data/
+│   ├── gesture_gen.db        # SQLite database (auto-created)
+│   └── images/               # Generated images storage
 ├── templates/                # Web UI templates
 ├── static/                   # CSS/JS assets
 └── tests/                    # Unit tests
