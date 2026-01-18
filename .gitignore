@@ -36,3 +36,16 @@ dummy_seed.png
 generated_*.png
 *.log
 .DS_Store
+
+# Claude Code / AI tools
+.claude/
+.specify/
+
+# Runtime data
+data/
+
+# Local development files
+config/constants.py
+logger.py
+tests/conftest.py
+tests/unit/test_api.py
